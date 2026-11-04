@@ -6,4 +6,5 @@ ventana.geometry("800x600")
 
 titulo=tk.Label(ventana, text="PARKING", font=("Times New Roman", 20, "bold"))
 titulo.pack(pady=20)
+
 ventana.mainloop()
