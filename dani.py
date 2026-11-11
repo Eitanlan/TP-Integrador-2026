@@ -19,4 +19,7 @@ est="baja"
 
 texto_estado=tk.Label(ventana, text="Estado de la barrera"  , font=("Times New Roman", 15, "bold")).place(x="450", y="150")
 estado = tk.Label(ventana, text=est,  font=("Times New Roman", 47, "bold")).place(x="450", y="190")
+boton_bajar_levantar = tk.Button(ventana)
+boton_bajar_levantar.place(y="300", x="260")
+
 ventana.mainloop()
