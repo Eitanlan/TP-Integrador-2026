@@ -26,10 +26,7 @@ titulo=tk.Label(ventana, text="PARKING", font=("Times New Roman", 20, "bold"))
 titulo.place(x="300", y="20")
 
 cant=0
-if receive_command == "ENTRA":
-    cant+=1
-elif receive_command == "SALE":
-    cant-=1
+
 
 
 
@@ -38,20 +35,29 @@ cantidad = tk.Label(ventana, text=cant, font=("Times New Roman", 50, "bold" )).p
 
 est="baja"
 
-if receive_command == "AUTO DETECTADO" and est=="baja":   
-    est="levantada"
-elif receive_command == "AUTO DETECTADO" and est=="levantada":
-    est="baja"
+
 
 
 boton_bajar_levantar = tk.Button(ventana)
 boton_bajar_levantar.place(y="300", x="260")
-if est=="baja":
-    boton_bajar_levantar.config(text="SUBIR BARRERA")
-    boton_bajar_levantar.config(command=mandar_msg_subir)
-elif est=="levantada":
-    boton_bajar_levantar.config(text="BAJAR BARRERA")
-    boton_bajar_levantar.config(command=mandar_msg_bajar)
+
 texto_estado=tk.Label(ventana, text="Estado de la barrera"  , font=("Times New Roman", 15, "bold")).place(x="450", y="150")
 estado = tk.Label(ventana, text=est,  font=("Times New Roman", 47, "bold")).place(x="450", y="190")
+
 ventana.mainloop()
+while True:
+    if est=="baja":
+        boton_bajar_levantar.config(text="SUBIR BARRERA")
+        boton_bajar_levantar.config(command=mandar_msg_subir)
+    elif est=="levantada":
+        boton_bajar_levantar.config(text="BAJAR BARRERA")
+        boton_bajar_levantar.config(command=mandar_msg_bajar)
+    if receive_command == "ENTRA":
+        cant+=1
+    elif receive_command == "SALE":
+        cant-=1
+
+    if receive_command == "AUTO DETECTADO" and est=="baja":   
+        est="levantada"
+    elif receive_command == "AUTO DETECTADO" and est=="levantada":
+        est="baja"
