@@ -1,12 +1,18 @@
 import tkinter as tk
 import serial
 import time
+from datetime import datetime
 
 arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=0.1)
 time.sleep(2)  
 
 def send_command(cmd):
     arduino.write((cmd + '\n').encode())
+
+def registrar_movimiento(texto):
+    hora_actual = datetime.now().strftime("%H:%M:%S")
+    mensaje_completo = f"[{hora_actual}] {texto}"
+    lista_movimientos.insert(0, mensaje_completo)
 
 def recibir_datos():
     global cant, est
@@ -16,15 +22,20 @@ def recibir_datos():
         if msg == "ENTRA":
             cant += 1
             lbl_cantidad.config(text=str(cant))
+            registrar_movimiento("Auto entró al parking")
         elif msg == "SALE":
             cant -= 1
             lbl_cantidad.config(text=str(cant))
+            registrar_movimiento("Auto salió del parking")
         elif msg == "AUTO DETECTADO":
             if est == "baja":
                 est = "levantada"
+                registrar_movimiento("Barrera subida bajada mediante el boton")
             else:
                 est = "baja"
+                registrar_movimiento("Barrera bajada mediante el boton")
             lbl_estado.config(text=est)
+            
             actualizar_boton()
 
     ventana.after(100, recibir_datos)
@@ -73,6 +84,17 @@ lbl_estado.place(x=450, y=190)
 boton_bajar_levantar = tk.Button(ventana, text="SUBIR BARRERA", command=cambiar_estado_boton)
 boton_bajar_levantar.place(y=300, x=260)
 
+tk.Label(ventana, text="Historial de Movimientos", font=("Times New Roman", 15, "bold")).place(x=20, y=360)
+frame_historial = tk.Frame(ventana)
+frame_historial.place(x=20, y=400, width=760, height=170)
+
+scrollbar = tk.Scrollbar(frame_historial)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+lista_movimientos = tk.Listbox(frame_historial, yscrollcommand=scrollbar.set, font=("Consolas", 10))
+lista_movimientos.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+scrollbar.config(command=lista_movimientos.yview)
 ventana.after(100, recibir_datos)
 
 ventana.mainloop()
