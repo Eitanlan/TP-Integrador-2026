@@ -40,7 +40,6 @@ def recibir_datos():
 
 def cambiar_estado_boton():
     send_command("BOTON")
-    registrar_movimiento("Comando enviado: BOTON")
 
 def actualizar_interfaz():
     lbl_estado.config(
