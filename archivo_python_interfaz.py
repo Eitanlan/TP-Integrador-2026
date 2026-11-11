@@ -32,7 +32,14 @@ elif receive_command == "SALE":
 texto_cantidad = tk.Label(ventana, text="Cantidad de autos", font=("Times New Roman", 15, "bold")).place(x="20", y="150")
 cantidad = tk.Label(ventana, text=cant, font=("Times New Roman", 50, "bold" )).place(x="70", y="190")
 
-est="levantada"
+est="baja"
+
+if receive_command == "AUTO DETECTADO" and est=="baja":   
+    send_command("LEVANTAR")
+    est="levantada"
+elif receive_command == "AUTO DETECTADO" and est=="levantada":
+    send_command("BAJAR")
+    est="baja"
 texto_estado=tk.Label(ventana, text="Estado de la barrera"  , font=("Times New Roman", 15, "bold")).place(x="450", y="150")
 estado = tk.Label(ventana, text=est,  font=("Times New Roman", 47, "bold")).place(x="450", y="190")
 ventana.mainloop()
