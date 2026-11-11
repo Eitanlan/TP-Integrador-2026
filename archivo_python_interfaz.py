@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 
 arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=0.1)
-time.sleep(2)  
+time.sleep(2) 
 
 def send_command(cmd):
     arduino.write((cmd + '\n').encode())
@@ -27,62 +27,86 @@ def recibir_datos():
             cant -= 1
             lbl_cantidad.config(text=str(cant))
             registrar_movimiento("Auto salió del parking")
-        elif msg == "BARRERA LEVANTADA" or msg == "AUTO DETECTADO" and est == "baja":
+        elif msg == "BARRERA LEVANTADA" or (msg == "AUTO DETECTADO" and est == "baja"):
             est = "levantada"
-            lbl_estado.config(text=est)
-            actualizar_boton()
+            actualizar_interfaz()
             registrar_movimiento("Barrera levantada")
-        elif msg == "BARRERA BAJA" or msg == "AUTO DETECTADO" and est == "levantada":
+        elif msg == "BARRERA BAJA" or (msg == "AUTO DETECTADO" and est == "levantada"):
             est = "baja"
-            lbl_estado.config(text=est)
-            actualizar_boton()
+            actualizar_interfaz()
             registrar_movimiento("Barrera bajada")
 
     ventana.after(100, recibir_datos)
 
 def cambiar_estado_boton():
-    if est == "baja":
-        send_command("SUBIR")
-        registrar_movimiento("Comando enviado: SUBIR")
-    else:
-        send_command("BAJAR")
-        registrar_movimiento("Comando enviado: BAJAR")
+    send_command("BOTON")
+    registrar_movimiento("Comando enviado: BOTON")
 
-def actualizar_boton():
+def actualizar_interfaz():
+    lbl_estado.config(
+        text="ALTA" if est == "levantada" else "BAJA",
+        fg="#4ADE80" if est == "levantada" else "#F87171"
+    )
     if est == "baja":
-        boton_bajar_levantar.config(text="SUBIR BARRERA")
+        boton_bajar_levantar.config(
+            text="Levantar Barrera",
+            bg="#3B82F6",
+            activebackground="#2563EB"
+        )
     else:
-        boton_bajar_levantar.config(text="BAJAR BARRERA")
+        boton_bajar_levantar.config(
+            text="Bajar Barrera",
+            bg="#EF4444",
+            activebackground="#DC2626"
+        )
 
 ventana = tk.Tk()
-ventana.title("Contador de autos con barrera")
-ventana.geometry("800x600")
-
-titulo = tk.Label(ventana, text="PARKING", font=("Times New Roman", 20, "bold"))
-titulo.place(x=300, y=20)
+ventana.title("Parking System")
+ventana.geometry("680x560")
+ventana.configure(bg="#1E1E2E")
+ventana.resizable(False, False)
 
 cant = 0
 est = "baja"
 
-tk.Label(ventana, text="Cantidad de autos", font=("Times New Roman", 15, "bold")).place(x=20, y=150)
-lbl_cantidad = tk.Label(ventana, text=str(cant), font=("Times New Roman", 50, "bold"))
-lbl_cantidad.place(x=70, y=190)
+tk.Label(ventana, text="CONTROL DE PARKING", font=("Segoe UI", 18, "bold"), fg="#FFF", bg="#1E1E2E").pack(pady=15)
 
-tk.Label(ventana, text="Estado de la barrera", font=("Times New Roman", 15, "bold")).place(x=450, y=150)
-lbl_estado = tk.Label(ventana, text=est, font=("Times New Roman", 47, "bold"))
-lbl_estado.place(x=450, y=190)
+f = tk.Frame(ventana, bg="#1E1E2E")
+f.pack(pady=5)
 
-boton_bajar_levantar = tk.Button(ventana, text="SUBIR BARRERA", command=cambiar_estado_boton)
-boton_bajar_levantar.place(y=300, x=260)
+c1 = tk.Frame(f, bg="#27293D", padx=25, pady=15)
+c1.pack(side="left", padx=10)
+tk.Label(c1, text="AUTOS", font=("Segoe UI", 10, "bold"), fg="#9CA3AF", bg="#27293D").pack()
+lbl_cantidad = tk.Label(c1, text=str(cant), font=("Segoe UI", 36, "bold"), fg="#60A5FA", bg="#27293D")
+lbl_cantidad.pack()
 
-tk.Label(ventana, text="Historial de Movimientos", font=("Times New Roman", 15, "bold")).place(x=20, y=360)
-frame_historial = tk.Frame(ventana)
-frame_historial.place(x=20, y=400, width=760, height=170)
+c2 = tk.Frame(f, bg="#27293D", padx=25, pady=15)
+c2.pack(side="left", padx=10)
+tk.Label(c2, text="BARRERA", font=("Segoe UI", 10, "bold"), fg="#9CA3AF", bg="#27293D").pack()
+lbl_estado = tk.Label(c2, text="BAJA", font=("Segoe UI", 36, "bold"), fg="#F87171", bg="#27293D")
+lbl_estado.pack()
+
+boton_bajar_levantar = tk.Button(
+    ventana, text="Levantar Barrera", command=cambiar_estado_boton, 
+    font=("Segoe UI", 11, "bold"), fg="#FFF", bg="#3B82F6", 
+    activeforeground="#FFF", activebackground="#2563EB", 
+    relief="flat", bd=0, padx=20, pady=10, cursor="hand2"
+)
+boton_bajar_levantar.pack(pady=15)
+
+tk.Label(ventana, text="Historial de Movimientos", font=("Segoe UI", 12, "bold"), fg="#FFF", bg="#1E1E2E").pack(anchor="w", padx=30)
+
+frame_historial = tk.Frame(ventana, bg="#1E1E2E")
+frame_historial.pack(pady=5, padx=30, fill="x")
 
 scrollbar = tk.Scrollbar(frame_historial)
 scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-lista_movimientos = tk.Listbox(frame_historial, yscrollcommand=scrollbar.set, font=("Consolas", 10))
+lista_movimientos = tk.Listbox(
+    frame_historial, yscrollcommand=scrollbar.set, 
+    font=("Consolas", 10), bg="#27293D", fg="#FFF", 
+    selectbackground="#3B82F6", relief="flat", bd=0, height=6
+)
 lista_movimientos.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
 scrollbar.config(command=lista_movimientos.yview)
