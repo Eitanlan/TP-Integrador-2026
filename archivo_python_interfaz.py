@@ -27,35 +27,26 @@ def recibir_datos():
             cant -= 1
             lbl_cantidad.config(text=str(cant))
             registrar_movimiento("Auto salió del parking")
-        elif msg == "AUTO DETECTADO":
-            if est == "baja":
-                est = "levantada"
-                registrar_movimiento("Barrera subida bajada mediante el boton")
-            else:
-                est = "baja"
-                registrar_movimiento("Barrera bajada mediante el boton")
+        elif msg == "BARRERA LEVANTADA" or msg == "AUTO DETECTADO" and est == "baja":
+            est = "levantada"
             lbl_estado.config(text=est)
-            
             actualizar_boton()
+            registrar_movimiento("Barrera levantada")
+        elif msg == "BARRERA BAJA" or msg == "AUTO DETECTADO" and est == "levantada":
+            est = "baja"
+            lbl_estado.config(text=est)
+            actualizar_boton()
+            registrar_movimiento("Barrera bajada")
 
     ventana.after(100, recibir_datos)
 
-def mandar_msg_subir():
-    send_command("SUBIR")
-
-def mandar_msg_bajar():
-    send_command("BAJAR")
-
 def cambiar_estado_boton():
-    global est
     if est == "baja":
-        mandar_msg_subir()
-        est = "levantada"
+        send_command("SUBIR")
+        registrar_movimiento("Comando enviado: SUBIR")
     else:
-        mandar_msg_bajar()
-        est = "baja"
-    lbl_estado.config(text=est)
-    actualizar_boton()
+        send_command("BAJAR")
+        registrar_movimiento("Comando enviado: BAJAR")
 
 def actualizar_boton():
     if est == "baja":
