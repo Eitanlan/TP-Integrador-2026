@@ -1,21 +1,22 @@
 #include <Servo.h>
 
-// Definicion de pines
 const int trigA = 2, echoA = 3;
 const int trigB = 4, echoB = 5;
 const int pinServo = 9;
 
-// Parametros de deteccion (en cm)
-const int distanciaActivacion = 10;
+const int distanciaActivacion = 8;
 const int distanciaMaxima = 20;
 
 Servo barrera;
 
-// Variables de estado
 bool anteriorA = false;
 bool anteriorB = false;
 bool barreraAbierta = false;
-int primero = 0; // 0: libre, 1: sentido A->B (Entrada), 2: sentido B->A (Salida)
+int primero = 0;
+
+unsigned long ultimoDisparoA = 0;
+unsigned long ultimoDisparoB = 0;
+const unsigned long cooldownSensor = 2000;
 
 long medirDistancia(int trigPin, int echoPin) {
   digitalWrite(trigPin, LOW);
@@ -24,7 +25,7 @@ long medirDistancia(int trigPin, int echoPin) {
   delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
 
-  long duracion = pulseIn(echoPin, HIGH, 30000);
+  long duracion = pulseIn(echoPin, HIGH, 20000);
   long distancia = duracion * 0.034 / 2;
 
   if (distancia == 0 || distancia > distanciaMaxima) {
@@ -42,11 +43,12 @@ void setup() {
   pinMode(echoB, INPUT);
 
   barrera.attach(pinServo);
-  barrera.write(0);
+  
+  barrera.write(130);
+  delay(1000);
 }
 
 void loop() {
-  // Control manual desde interfaz Python
   if (Serial.available() > 0) {
     String mensaje = Serial.readStringUntil('\n');
     mensaje.trim();
@@ -55,41 +57,45 @@ void loop() {
       barreraAbierta = !barreraAbierta;
 
       if (barreraAbierta) {
-        barrera.write(90);
+        barrera.write(25);
         Serial.println("BARRERA LEVANTADA");
       } else {
-        barrera.write(0);
+        barrera.write(130);
         primero = 0;
         Serial.println("BARRERA BAJA");
       }
     }
   }
 
-  // Lectura de sensores
   long distA = medirDistancia(trigA, echoA);
+  delay(15);
   long distB = medirDistancia(trigB, echoB);
 
   bool detectaA = (distA > 0 && distA <= distanciaActivacion);
   bool detectaB = (distB > 0 && distB <= distanciaActivacion);
 
-  // Control de sentido y accionamiento de barrera
+  unsigned long tiempoActual = millis();
+
   if (primero == 0) {
-    if (detectaA && !anteriorA) {
+    if (detectaA && !anteriorA && (tiempoActual - ultimoDisparoA > cooldownSensor)) {
       primero = 1;
       barreraAbierta = true;
-      barrera.write(90);
+      barrera.write(25);
+      ultimoDisparoA = tiempoActual;
       Serial.println("BARRERA LEVANTADA");
-    } else if (detectaB && !anteriorB) {
+    } 
+    else if (detectaB && !anteriorB && (tiempoActual - ultimoDisparoB > cooldownSensor)) {
       primero = 2;
       barreraAbierta = true;
-      barrera.write(90);
+      barrera.write(25);
+      ultimoDisparoB = tiempoActual;
       Serial.println("BARRERA LEVANTADA");
     }
   } 
   else if (primero == 1) {
     if (!detectaB && anteriorB) {
       barreraAbierta = false;
-      barrera.write(0);
+      barrera.write(130);
       primero = 0;
       Serial.println("BARRERA BAJA");
       Serial.println("ENTRA");
@@ -98,7 +104,7 @@ void loop() {
   else if (primero == 2) {
     if (!detectaA && anteriorA) {
       barreraAbierta = false;
-      barrera.write(0);
+      barrera.write(130);
       primero = 0;
       Serial.println("BARRERA BAJA");
       Serial.println("SALE");
@@ -108,5 +114,5 @@ void loop() {
   anteriorA = detectaA;
   anteriorB = detectaB;
 
-  delay(50);
+  delay(30);
 }
